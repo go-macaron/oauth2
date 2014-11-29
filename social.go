@@ -92,8 +92,8 @@ func Dropbox(opt Options) macaron.Handler {
 
 func Tencent(opt Options) macaron.Handler {
 	return NewOAuth2Provider(opt,
-		"https://open.t.qq.com/cgi-bin/oauth2/authorize",
-		"https://open.t.qq.com/cgi-bin/oauth2/access_token",
+		"https://graph.qq.com/oauth2.0/authorize",
+		"https://graph.qq.com/oauth2.0/token",
 	)
 }
 
