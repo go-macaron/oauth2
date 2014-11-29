@@ -18,6 +18,7 @@ package oauth2
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -59,10 +60,14 @@ func TestJWTFetch_JSONResponse(t *testing.T) {
 		}`))
 	}))
 	defer ts.Close()
-	f, err := New(
-		JWTClient("aaa@xxx.com", dummyPrivateKey),
-		JWTEndpoint(ts.URL),
-	)
+
+	pk, err := ParseKey(dummyPrivateKey)
+	au, err := url.Parse(ts.URL)
+	f, err := New(&Options{
+		Email:      "aaa@xxx.com",
+		PrivateKey: pk,
+		AUD:        au,
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -92,10 +97,14 @@ func TestJWTFetch_BadResponse(t *testing.T) {
 		w.Write([]byte(`{"scope": "user", "token_type": "bearer"}`))
 	}))
 	defer ts.Close()
-	f, err := New(
-		JWTClient("aaa@xxx.com", dummyPrivateKey),
-		JWTEndpoint(ts.URL),
-	)
+
+	pk, err := ParseKey(dummyPrivateKey)
+	au, err := url.Parse(ts.URL)
+	f, err := New(&Options{
+		Email:      "aaa@xxx.com",
+		PrivateKey: pk,
+		AUD:        au,
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -124,10 +133,14 @@ func TestJWTFetch_BadResponseType(t *testing.T) {
 		w.Write([]byte(`{"access_token":123, "scope": "user", "token_type": "bearer"}`))
 	}))
 	defer ts.Close()
-	f, err := New(
-		JWTClient("aaa@xxx.com", dummyPrivateKey),
-		JWTEndpoint(ts.URL),
-	)
+
+	pk, err := ParseKey(dummyPrivateKey)
+	au, err := url.Parse(ts.URL)
+	f, err := New(&Options{
+		Email:      "aaa@xxx.com",
+		PrivateKey: pk,
+		AUD:        au,
+	})
 	if err != nil {
 		t.Error(err)
 	}

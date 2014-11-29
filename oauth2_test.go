@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -44,13 +45,26 @@ func (c *mockCache) WriteToken(*Token) {
 	// do nothing
 }
 
-func newOpts(url string) *Options {
-	opts, _ := New(
-		Client("CLIENT_ID", "CLIENT_SECRET"),
-		RedirectURL("REDIRECT_URL"),
-		Scope("scope1", "scope2"),
-		Endpoint(url+"/auth", url+"/token"),
-	)
+func newOpts(path string) *Options {
+	au, err := url.Parse(path + "/auth")
+	if err != nil {
+		println(err.Error())
+		return nil
+	}
+	tu, err := url.Parse(path + "/token")
+	if err != nil {
+		println(err.Error())
+		return nil
+	}
+
+	opts, _ := New(&Options{
+		ClientID:     "CLIENT_ID",
+		ClientSecret: "CLIENT_SECRET",
+		RedirectURL:  "REDIRECT_URL",
+		Scopes:       []string{"scope1", "scope2"},
+		AuthURL:      au,
+		TokenURL:     tu,
+	})
 	return opts
 }
 
@@ -63,14 +77,18 @@ func TestAuthCodeURL(t *testing.T) {
 }
 
 func TestAuthCodeURL_Optional(t *testing.T) {
-	opts, _ := New(
-		Client("CLIENT_ID", ""),
-		Endpoint("auth-url", "token-token"),
-	)
+	au, err := url.Parse("auth-url")
+	tu, err := url.Parse("token-token")
+	opts, _ := New(&Options{
+		ClientID: "CLIENT_ID",
+		AuthURL:  au,
+		TokenURL: tu,
+	})
 	url := opts.AuthCodeURL("", "", "")
 	if url != "auth-url?client_id=CLIENT_ID&response_type=code" {
 		t.Fatalf("Auth code URL doesn't match the expected, found: %v", url)
 	}
+	_ = err
 }
 
 func TestExchangeRequest(t *testing.T) {
@@ -211,11 +229,15 @@ func TestExchangeRequest_NonBasicAuth(t *testing.T) {
 		},
 	}
 	c := &http.Client{Transport: tr}
-	opts, err := New(
-		Client("CLIENT_ID", ""),
-		Endpoint("https://accounts.google.com/auth", "https://accounts.google.com/token"),
-		HTTPClient(c),
-	)
+
+	au, err := url.Parse("https://accounts.google.com/auth")
+	tu, err := url.Parse("https://accounts.google.com/token")
+	opts, _ := New(&Options{
+		ClientID: "CLIENT_ID",
+		AuthURL:  au,
+		TokenURL: tu,
+		Client:   c,
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -275,10 +297,14 @@ func TestFetchWithNoRefreshToken(t *testing.T) {
 }
 
 func TestCacheNoToken(t *testing.T) {
-	opts, err := New(
-		Client("CLIENT_ID", "CLIENT_SECRET"),
-		Endpoint("/auth", "/token"),
-	)
+	au, err := url.Parse("/auth")
+	tu, err := url.Parse("/token")
+	opts, _ := New(&Options{
+		ClientID:     "CLIENT_ID",
+		ClientSecret: "CLIENT_SECRET",
+		AuthURL:      au,
+		TokenURL:     tu,
+	})
 	if err != nil {
 		t.Error(err)
 	}

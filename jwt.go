@@ -16,7 +16,11 @@
 package oauth2
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/macaron-contrib/oauth2/internal"
 	"github.com/macaron-contrib/oauth2/jws"
 )
 
@@ -33,39 +36,28 @@ var (
 	defaultHeader    = &jws.Header{Algorithm: "RS256", Typ: "JWT"}
 )
 
-// JWTClient requires OAuth 2.0 JWT credentials.
-// Required for the 2-legged JWT flow.
-func JWTClient(email string, key []byte) Option {
-	return func(o *Options) error {
-		pk, err := internal.ParseKey(key)
+// ParseKey converts the binary contents of a private key file
+// to an *rsa.PrivateKey. It detects whether the private key is in a
+// PEM container or not. If so, it extracts the the private key
+// from PEM container before conversion. It only supports PEM
+// containers with no passphrase.
+func ParseKey(key []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(key)
+	if block != nil {
+		key = block.Bytes
+	}
+	parsedKey, err := x509.ParsePKCS8PrivateKey(key)
+	if err != nil {
+		parsedKey, err = x509.ParsePKCS1PrivateKey(key)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		o.Email = email
-		o.PrivateKey = pk
-		return nil
 	}
-}
-
-// JWTEndpoint requires the JWT token endpoint of the OAuth 2.0 provider.
-func JWTEndpoint(aud string) Option {
-	return func(o *Options) error {
-		au, err := url.Parse(aud)
-		if err != nil {
-			return err
-		}
-		o.AUD = au
-		return nil
+	parsed, ok := parsedKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("oauth2: private key is invalid")
 	}
-}
-
-// Subject requires a user to impersonate.
-// Optional.
-func Subject(user string) Option {
-	return func(o *Options) error {
-		o.Subject = user
-		return nil
-	}
+	return parsed, nil
 }
 
 func makeTwoLeggedFetcher(o *Options) func(t *Token) (*Token, error) {

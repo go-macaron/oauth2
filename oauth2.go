@@ -44,19 +44,6 @@ type TokenStore interface {
 	WriteToken(*Token)
 }
 
-// Option represents a function that applies some state to
-// an Options object.
-type Option func(*Options) error
-
-// HTTPClient allows you to provide a custom http.Client to be
-// used to retrieve tokens from the OAuth 2.0 provider.
-func HTTPClient(c *http.Client) Option {
-	return func(o *Options) error {
-		o.Client = c
-		return nil
-	}
-}
-
 // New builds a new options object and determines the type of the OAuth 2.0
 // (2-legged, 3-legged or custom) by looking at the provided options.
 // If the flow type cannot determined automatically, an error is returned.
