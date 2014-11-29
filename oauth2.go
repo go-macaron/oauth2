@@ -278,8 +278,8 @@ func retrieveToken(o *Options, v url.Values) (*Token, error) {
 	token := &Token{}
 	expires := int(0)
 	content, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	switch content {
-	case "application/x-www-form-urlencoded", "text/plain":
+	if content == "application/x-www-form-urlencoded" ||
+		(content == "text/plain" && !strings.Contains(o.TokenURL.String(), "api.weibo.com")) {
 		vals, err := url.ParseQuery(string(body))
 		if err != nil {
 			return nil, err
@@ -287,7 +287,7 @@ func retrieveToken(o *Options, v url.Values) (*Token, error) {
 		token.AccessToken = vals.Get("access_token")
 		token.TokenType = vals.Get("token_type")
 		token.RefreshToken = vals.Get("refresh_token")
-		token.raw = vals
+		token.Raw = vals
 		e := vals.Get("expires_in")
 		if e == "" {
 			// TODO(jbd): Facebook's OAuth2 implementation is broken and
@@ -296,7 +296,7 @@ func retrieveToken(o *Options, v url.Values) (*Token, error) {
 			e = vals.Get("expires")
 		}
 		expires, _ = strconv.Atoi(e)
-	default:
+	} else {
 		b := make(map[string]interface{})
 		if err = json.Unmarshal(body, &b); err != nil {
 			return nil, err
@@ -304,7 +304,7 @@ func retrieveToken(o *Options, v url.Values) (*Token, error) {
 		token.AccessToken, _ = b["access_token"].(string)
 		token.TokenType, _ = b["token_type"].(string)
 		token.RefreshToken, _ = b["refresh_token"].(string)
-		token.raw = b
+		token.Raw = b
 		e, ok := b["expires_in"].(float64)
 		if !ok {
 			// TODO(jbd): Facebook's OAuth2 implementation is broken and
@@ -314,6 +314,7 @@ func retrieveToken(o *Options, v url.Values) (*Token, error) {
 		}
 		expires = int(e)
 	}
+
 	// Don't overwrite `RefreshToken` with an empty value
 	// if this was a token refreshing request.
 	if token.RefreshToken == "" {
@@ -348,7 +349,8 @@ func providerAuthHeaderWorks(tokenURL string) bool {
 		strings.HasPrefix(tokenURL, "https://www.douban.com/") ||
 		strings.HasPrefix(tokenURL, "https://api.dropbox.com/") ||
 		strings.HasPrefix(tokenURL, "https://api.soundcloud.com/") ||
-		strings.HasPrefix(tokenURL, "https://www.linkedin.com/") {
+		strings.HasPrefix(tokenURL, "https://www.linkedin.com/") ||
+		strings.HasPrefix(tokenURL, "https://api.weibo.com/") {
 		// Some sites fail to implement the OAuth2 spec fully.
 		return false
 	}

@@ -114,7 +114,7 @@ func makeTwoLeggedFetcher(o *Options) func(t *Token) (*Token, error) {
 		token := &Token{}
 		token.AccessToken, _ = b["access_token"].(string)
 		token.TokenType, _ = b["token_type"].(string)
-		token.raw = b
+		token.Raw = b
 		if e, ok := b["expires_in"].(int); ok {
 			token.Expiry = time.Now().Add(time.Duration(e) * time.Second)
 		}

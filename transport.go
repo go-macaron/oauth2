@@ -42,9 +42,9 @@ type Token struct {
 	// The remaining lifetime of the access token.
 	Expiry time.Time `json:"expiry,omitempty"`
 
-	// raw optionally contains extra metadata from the server
+	// Raw optionally contains extra metadata from the server
 	// when updating a token.
-	raw interface{}
+	Raw interface{}
 }
 
 // Extra returns an extra field returned from the server during token retrieval.
@@ -52,10 +52,10 @@ type Token struct {
 //     idToken := token.Extra("id_token")
 //
 func (t *Token) Extra(key string) string {
-	if vals, ok := t.raw.(url.Values); ok {
+	if vals, ok := t.Raw.(url.Values); ok {
 		return vals.Get(key)
 	}
-	if raw, ok := t.raw.(map[string]interface{}); ok {
+	if raw, ok := t.Raw.(map[string]interface{}); ok {
 		if val, ok := raw[key].(string); ok {
 			return val
 		}

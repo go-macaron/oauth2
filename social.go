@@ -61,8 +61,8 @@ func Google(opt Options) macaron.Handler {
 	)
 }
 
-// Github returns a new Github OAuth 2.0 backend endpoint.
-func Github(opt Options) macaron.Handler {
+// GitHub returns a new Github OAuth 2.0 backend endpoint.
+func GitHub(opt Options) macaron.Handler {
 	return NewOAuth2Provider(opt,
 		"https://github.com/login/oauth/authorize",
 		"https://github.com/login/oauth/access_token",
@@ -80,6 +80,13 @@ func LinkedIn(opt Options) macaron.Handler {
 	return NewOAuth2Provider(opt,
 		"https://www.linkedin.com/uas/oauth2/authorization",
 		"https://www.linkedin.com/uas/oauth2/accessToken",
+	)
+}
+
+func Dropbox(opt Options) macaron.Handler {
+	return NewOAuth2Provider(opt,
+		"https://www.dropbox.com/1/oauth2/authorize",
+		"https://api.dropbox.com/1/oauth2/token",
 	)
 }
 
@@ -177,6 +184,7 @@ func login(ctx *macaron.Context, s session.Store, opt *Options) {
 		if next == "" {
 			next = AppSubUrl + "/"
 		}
+		// println(111, opt.AuthCodeURL(next, "", ""))
 		ctx.Redirect(opt.AuthCodeURL(next, "", ""))
 		return
 	}
@@ -197,6 +205,7 @@ func handleOAuth2Callback(ctx *macaron.Context, s session.Store, opt *Options) {
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
+		println(err.Error())
 		ctx.Redirect(PathError)
 		return
 	}
