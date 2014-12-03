@@ -15,7 +15,7 @@
 
 package oauth2
 
-// NOTE: last sync 4253789 on Nov 18, 2014.
+// NOTE: last sync d5854d9 on Nov 30, 2014.
 
 import (
 	"encoding/json"

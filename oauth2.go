@@ -16,7 +16,7 @@
 // Package oauth2 is a middleware that provides support of user login via an OAuth 2.0 backend for Macaron.
 package oauth2
 
-// NOTE: last sync 5fd31d5 on Nov 25, 2014.
+// NOTE: last sync 3ec35f1 on Nov 27, 2014.
 
 import (
 	"crypto/rsa"
