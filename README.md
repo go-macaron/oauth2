@@ -1,7 +1,7 @@
 oauth2
 ======
 
-Middleware oauth2 provides support of user login via an OAuth 2.0 backend for [Macaron](https://github.com/Unknwon/macaron).
+Middleware oauth2 provides support of user login via an OAuth 2.0 backend for [Macaron](https://github.com/go-macaron/macaron).
 
 It currently support Google, GitHub, LinkedIn, Dropbox, Facebook, Weibo and QQ.
 

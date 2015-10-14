@@ -22,8 +22,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Unknwon/macaron"
-	"github.com/macaron-contrib/session"
+	"github.com/go-macaron/session"
+	"gopkg.in/macaron.v1"
 )
 
 const (

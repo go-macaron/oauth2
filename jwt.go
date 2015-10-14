@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/macaron-contrib/oauth2/jws"
+	"github.com/go-macaron/oauth2/jws"
 )
 
 var (
