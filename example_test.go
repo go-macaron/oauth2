@@ -1,5 +1,5 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
-// Copyright 2014 The Macaron Authors
+// Copyright 2013 macaron Authors
+// Copyright 2016 The Macaron Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License"): you may
 // not use this file except in compliance with the License. You may obtain
@@ -16,83 +16,45 @@
 package oauth2_test
 
 import (
-	"fmt"
-	"log"
-	"net/http"
 	"testing"
 
-	"github.com/macaron-contrib/oauth2"
+	"github.com/go-macaron/oauth2"
+	"github.com/go-macaron/session"
+	goauth2 "golang.org/x/oauth2"
+	"gopkg.in/macaron.v1"
 )
 
 // TODO(jbd): Remove after Go 1.4.
 // Related to https://codereview.appspot.com/107320046
 func TestA(t *testing.T) {}
 
-func Example_regular() {
-	opts, err := oauth2.New(
-		oauth2.Client("YOUR_CLIENT_ID", "YOUR_CLIENT_SECRET"),
-		oauth2.RedirectURL("YOUR_REDIRECT_URL"),
-		oauth2.Scope("SCOPE1", "SCOPE2"),
-		oauth2.Endpoint(
-			"https://provider.com/o/oauth2/auth",
-			"https://provider.com/o/oauth2/token",
-		),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+func ExampleLogin() {
+	m := macaron.Classic()
+	m.Use(session.Sessioner())
+	m.Use(oauth2.Google(
+		&goauth2.Config{
+			ClientID:     "client_id",
+			ClientSecret: "client_secret",
+			Scopes:       []string{"https://www.googleapis.com/auth/drive"},
+			RedirectURL:  "redirect_url",
+		},
+	))
 
-	// Redirect user to consent page to ask for permission
-	// for the scopes specified above.
-	url := opts.AuthCodeURL("state", "online", "auto")
-	fmt.Printf("Visit the URL for the auth dialog: %v", url)
+	// Tokens are injected to the handlers
+	m.Get("/", func(tokens oauth2.Tokens) string {
+		if tokens.Expired() {
+			return "not logged in, or the access token is expired"
+		}
+		return "logged in"
+	})
 
-	// Use the authorization code that is pushed to the redirect URL.
-	// NewTransportWithCode will do the handshake to retrieve
-	// an access token and initiate a Transport that is
-	// authorized and authenticated by the retrieved token.
-	var code string
-	if _, err = fmt.Scan(&code); err != nil {
-		log.Fatal(err)
-	}
-	t, err := opts.NewTransportFromCode(code)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Routes that require a logged in user
+	// can be protected with oauth2.LoginRequired handler.
+	// If the user is not authenticated, they will be
+	// redirected to the login path.
+	m.Get("/restrict", oauth2.LoginRequired, func(tokens oauth2.Tokens) string {
+		return tokens.Access()
+	})
 
-	// You can use t to initiate a new http.Client and
-	// start making authenticated requests.
-	client := http.Client{Transport: t}
-	client.Get("...")
-}
-
-func Example_jWT() {
-	opts, err := oauth2.New(
-		// The contents of your RSA private key or your PEM file
-		// that contains a private key.
-		// If you have a p12 file instead, you
-		// can use `openssl` to export the private key into a pem file.
-		//
-		//    $ openssl pkcs12 -in key.p12 -out key.pem -nodes
-		//
-		// It only supports PEM containers with no passphrase.
-		oauth2.JWTClient(
-			"xxx@developer.gserviceaccount.com",
-			[]byte("-----BEGIN RSA PRIVATE KEY-----...")),
-		oauth2.Scope("SCOPE1", "SCOPE2"),
-		oauth2.JWTEndpoint("https://provider.com/o/oauth2/token"),
-		// If you would like to impersonate a user, you can
-		// create a transport with a subject. The following GET
-		// request will be made on the behalf of user@example.com.
-		// Subject is optional.
-		oauth2.Subject("user@example.com"),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Initiate an http.Client, the following GET request will be
-	// authorized and authenticated on the behalf of user@example.com.
-	client := http.Client{Transport: opts.NewTransport()}
-	client.Get("...")
+	m.Run()
 }
