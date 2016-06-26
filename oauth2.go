@@ -26,6 +26,9 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"gopkg.in/macaron.v1"
+	"golang.org/x/oauth2/github"
+	"golang.org/x/oauth2/facebook"
+	"golang.org/x/oauth2/linkedin"
 )
 
 const (
@@ -93,28 +96,19 @@ func Google(conf *oauth2.Config) macaron.Handler {
 
 // Github returns a new Github OAuth 2.0 backend endpoint.
 func Github(conf *oauth2.Config) macaron.Handler {
-	conf.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://github.com/login/oauth/authorize",
-		TokenURL: "https://github.com/login/oauth/access_token",
-	}
+	conf.Endpoint = github.Endpoint
 	return NewOAuth2Provider(conf)
 }
 
 // Facebook returns a new Facebook OAuth 2.0 backend endpoint.
 func Facebook(conf *oauth2.Config) macaron.Handler {
-	conf.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://www.facebook.com/dialog/oauth",
-		TokenURL: "https://graph.facebook.com/oauth/access_token",
-	}
+	conf.Endpoint = facebook.Endpoint
 	return NewOAuth2Provider(conf)
 }
 
 // LinkedIn returns a new LinkedIn OAuth 2.0 backend endpoint.
 func LinkedIn(conf *oauth2.Config) macaron.Handler {
-	conf.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://www.linkedin.com/uas/oauth2/authorization",
-		TokenURL: "https://www.linkedin.com/uas/oauth2/accessToken",
-	}
+	conf.Endpoint = linkedin.Endpoint
 	return NewOAuth2Provider(conf)
 }
 
